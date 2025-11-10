@@ -9,11 +9,7 @@ def read_dat(filename):
     return A
 
 def build_S_matrix(n):
-    S=[]
-    for i in range(1,n):
-        for j in range(1,n):
-            S[i]=[]
-            S[i][j]=1/n
+    S=np.ones((n,n))/n
     return S
 
 def find_eigenvector(M):
