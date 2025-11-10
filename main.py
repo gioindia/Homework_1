@@ -8,8 +8,8 @@ def read_dat(filename):
     A=[[1,2],[3,4]]
     return A
 
-def build_S_matrix(n):
-    S=np.ones((n,n))/n
+def build_S_columnvector(n):
+    S=np.ones((n,1))/n
     return S
 
 def find_eigenvector(M):
