@@ -20,7 +20,7 @@ def main():
     filename="graph1.dat"
     m=0.15
     A=read_dat(filename)
-    S=build_S_matrix(len(A[0]))
+    S=build_S_columnvector(len(A[0]))
     M=(1-m)*A+m*S
     x=find_eigenvector(M)
     print(f"The eigenvcetor for the graph {filename} is: {x}")
