@@ -35,7 +35,8 @@ def read_dat(file_name):
                     
             for i in range(num_nodes):
                 count=np.count_nonzero(A[:,i], axis=0)
-                A[:,i]=A[:,i]/count
+                if count != 0:
+                    A[:,i]=A[:,i]/count
                     
     except FileNotFoundError:
         print(f"Error: File '{file_name}' not found.")
@@ -51,52 +52,23 @@ def build_S_columnvector(n):
     return S
 
 def find_eigenvector(A,S,m):
-    x=[1,1,1,1]
+    x=np.random.random(A.shape[0])
     return x
 
-def graph1():
-    filename="graph1.dat"
-    m=0.15
-    A,labels =read_dat(filename)
-    S=build_S_columnvector(int(A.shape[0]))
-    x=find_eigenvector(A,S,m)
-    sorted_index=np.argsort(x)
-    sorted_index=sorted_index[::-1]
-    print(f"The importance score for the graph {filename} is:")
-    for i in range(A.shape[0]):
-        print(f"{labels[sorted_index[i]+1]}: {x[sorted_index[i]]}")
-    return 
 
-def graph2():
-    filename="graph2.dat"
-    m=0.15
-    A,labels =read_dat(filename)
-    S=build_S_columnvector(int(A.shape[0]))
-    x=find_eigenvector(A,S,m)
-    sorted_index=np.argsort(x)
-    sorted_index=sorted_index[::-1]
-    print(f"The importance score for the graph {filename} is:")
-    for i in range(A.shape[0]):
-        print(f"{labels[sorted_index[i]+1]}: {x[sorted_index[i]]}")
-    return 
-
-def graph1_modified():
-    filename="graph1_modified.dat"
-    m=0.15
-    A,labels =read_dat(filename)
-    S=build_S_columnvector(int(A.shape[0]))
-    x=find_eigenvector(A,S,m)
-    sorted_index=np.argsort(x)
-    sorted_index=sorted_index[::-1]
-    print(f"The importance score for the graph {filename} is:")
-    for i in range(A.shape[0]):
-        print(f"{labels[sorted_index[i]+1]}: {x[sorted_index[i]]}")
-    return
 
 def main():
-    graph1()
-    graph2()
-    graph1_modified()
+    file_names=["graph1.dat","graph2.dat", "graph1_modified.dat"]
+    for filename in file_names:
+        m=0.15
+        A,labels = read_dat(filename)
+        S=build_S_columnvector(int(A.shape[0]))
+        x=find_eigenvector(A,S,m)
+        sorted_index=np.argsort(x)
+        sorted_index=sorted_index[::-1]
+        print(f"The importance score for the graph {filename} is:")
+        for i in range(A.shape[0]):
+            print(f"{labels[sorted_index[i]+1]}: {x[sorted_index[i]]:.4f}")
     return
 
 # Exercise 4
