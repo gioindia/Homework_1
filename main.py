@@ -48,11 +48,18 @@ def read_dat(file_name):
     return A, labels
 
 def build_S_columnvector(n):
-    S=np.ones((n,1))/n
+    S=np.ones(n)/n
     return S
 
-def find_eigenvector(A,S,m):
-    x=np.random.random(A.shape[0])
+def find_eigenvector(A,s,m, tolerance=1e-6, max_iterations=100):
+    n = A.shape[0]
+    x = np.random.rand(n)
+    x = x / np.linalg.norm(x, 1)
+    for _ in range(max_iterations):
+        x_new = (1 - m) * A @ x + m * s
+        if np.linalg.norm(x_new - x, 1) < tolerance:
+            break
+        x = x_new
     return x
 
 
