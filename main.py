@@ -62,12 +62,60 @@ def power_iteration_with_vector(A, s, m, tolerance=1e-6, max_iterations=1000):
         print(f"  Warning: Maximum iterations ({max_iterations}) reached")
     return x
 
+def check_dangling_nodes(A):
+    n = A.shape[0]
+    dangling = []
+    for i in range(n):
+        if np.sum(A[:, i]) == 0:
+            dangling.append(i)
+    return dangling
+
+def exercise_4_analysis(A, labels):
+    n = A.shape[0]
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    idx = np.argsort(np.abs(eigenvalues))[::-1]
+    eigenvalues = eigenvalues[idx]
+    eigenvectors = eigenvectors[:, idx]
+    perron_eigenvalue = eigenvalues[0]
+    perron_eigenvector = eigenvectors[:, 0]
+    print(f"PERRON EIGENVALUE (largest): λ = {perron_eigenvalue:.6f}")
+    # Make eigenvector non-negative and normalize
+    if np.any(perron_eigenvector < 0):
+        perron_eigenvector = -perron_eigenvector
+    # Ensure real values
+    if np.iscomplexobj(perron_eigenvector):
+        perron_eigenvector = np.real(perron_eigenvector)
+    # Normalize to sum to 1
+    perron_eigenvector = perron_eigenvector / np.sum(perron_eigenvector)
+    print(f"\nPerron eigenvector (normalized to sum=1):")
+    sorted_indices = np.argsort(perron_eigenvector)[::-1]
+    print(f"{'-'*50}")
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels[idx + 1]
+        score = perron_eigenvector[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")    
+    # Verify it's an eigenvector
+    result = A @ perron_eigenvector
+    expected = perron_eigenvalue * perron_eigenvector
+    error = np.linalg.norm(result - expected)
+    print(f"\nVerification: ||A·v - λ·v|| = {error:.2e}")
+    return perron_eigenvalue, perron_eigenvector
+
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
     s = np.ones(n) / n
     print(f"\nGraph {filename}")
     x = power_iteration_with_vector(A, s, m)
+    dangling = check_dangling_nodes(A)
+    if dangling:
+        print(f"  - Warning: Found {len(dangling)} dangling node(s): {[labels[i+1] for i in dangling]}")
+        print(f"    (These nodes have importance score ≈ {m/n:.6f})")
+        if filename=="Homework_1/graph1_modified.dat":
+            exercise_4_analysis(A, labels)
+            return
+    else:
+        print(f"  - No dangling nodes detected")
     sorted_indices = np.argsort(x)[::-1]
     print(f"PageRank scores (sorted by importance):")
     print(f"{'-'*50}")
@@ -79,13 +127,11 @@ def analyze_graph(filename, m=0.15):
     return x, labels
 
 def main():
-    file_names = ["Homework_1/graph1.dat", "Homework_1/graph2.dat", "Homework_1/graph1_modified.dat"]
+    file_names = ["Homework_1/graph1.dat", "Homework_1/graph2.dat", "Homework_1/graph1_modified.dat", "Homework_1/hollins.dat"]
     for filename in file_names:
         analyze_graph(filename, m=m)
     return
 
-# Exercise 4
-
-# Exercise 9
+# TODO: Exercise 9
 
 main()
