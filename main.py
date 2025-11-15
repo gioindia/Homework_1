@@ -132,6 +132,11 @@ def main():
         analyze_graph(filename, m=m)
     return
 
-# TODO: Exercise 9
-
+# Exercise 9
+'''
+Since the importance score is defined:
+    x[i]= (1-m)*(Ax)[i] + m*s
+In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is equal to 0. s is a column in which all of his values is  1/n.
+So the importance score for a node with no backlinks is m/n.
+'''
 main()
