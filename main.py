@@ -1,10 +1,6 @@
 import numpy as np
 m=0.15
 
-# Implement PagesRank + exercises 4, 9
-
-# Algoritm
-
 def read_dat(file_name):
     labels = {}
     num_nodes = 0
@@ -48,18 +44,18 @@ def read_dat(file_name):
     
     return A, labels
 
-def power_iteration_with_vector(A, s, m, tolerance=1e-6, max_iterations=1000):
+def power_iteration_with_vector(A, s, m, output, tolerance=1e-6, max_iterations=1000):
     n = A.shape[0]
     x = np.ones(n) / n
     for iteration in range(max_iterations):
         x_new = (1 - m) * (A @ x) + m * s
         x_new = x_new / np.sum(x_new) # normalized
         if np.linalg.norm(x_new - x, 1) < tolerance:
-            print(f"  Converged in {iteration + 1} iterations")
+            print(f"  Converged in {iteration + 1} iterations", file=output)
             break
         x = x_new
     else:
-        print(f"  Warning: Maximum iterations ({max_iterations}) reached")
+        print(f"  Warning: Maximum iterations ({max_iterations}) reached", file=output)
     return x
 
 def check_dangling_nodes(A):
@@ -105,35 +101,51 @@ def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
     s = np.ones(n) / n
-    print(f"\nGraph {filename}")
-    x = power_iteration_with_vector(A, s, m)
+    is_hollins = filename == "hollins.dat"
+    output_file = None
+    if is_hollins:
+        output_file = open("hollins_results.txt", "w")
+        output = output_file
+    else:
+        import sys
+        output = sys.stdout
+    print(f"\nGraph {filename}", file=output)
+    x = power_iteration_with_vector(A, s, m, output)
     dangling = check_dangling_nodes(A)
     if dangling:
-        print(f"  - Warning: Found {len(dangling)} dangling node(s): {[labels[i+1] for i in dangling]}")
-        print(f"    (These nodes have importance score ≈ {m/n:.6f})")
-        if filename=="Homework_1/graph1_modified.dat":
+        print(f"  - Warning: Found {len(dangling)} dangling node(s): {[labels[i+1] for i in dangling]}", file=output)
+        print(f"    (These nodes have initial importance score ≈ {m/n:.6f})", file=output)
+        if filename == "Homework_1/graph1_modified.dat":
             exercise_4_analysis(A, labels)
+            if output_file:
+                output_file.close()
             return
     else:
-        print(f"  - No dangling nodes detected")
+        print(f"  - No dangling nodes detected", file=output)
+    
     sorted_indices = np.argsort(x)[::-1]
-    print(f"PageRank scores (sorted by importance):")
-    print(f"{'-'*50}")
+    print(f"PageRank scores (sorted by importance):", file=output)
+    print(f"{'-'*50}", file=output)
     for rank, idx in enumerate(sorted_indices, 1):
         node_label = labels[idx + 1]
         score = x[idx]
-        print(f"  {rank}. {node_label:20s}: {score:.6f}")
-    print("\n" + "="*70)
+        print(f"  {rank}. {node_label:20s}: {score:.6f}", file=output)
+    print("\n" + "="*70, file=output)
+    
+    if output_file:
+        output_file.close()
+        print(f"\n{filename} results saved to hollins_results.txt")
+    
     return x, labels
 
 def main():
-    file_names = ["Homework_1/graph1.dat", "Homework_1/graph2.dat", "Homework_1/graph1_modified.dat", "Homework_1/hollins.dat"]
+    file_names = ["graph1.dat", "graph2.dat", "graph1_modified.dat", "hollins.dat"]
     for filename in file_names:
         analyze_graph(filename, m=m)
     return
 
-# Exercise 9
 '''
+Exercise 9:
 Since the importance score is defined:
     x[i]= (1-m)*(Ax)[i] + m*s
 In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is equal to 0. s is a column in which all of his values is  1/n.
