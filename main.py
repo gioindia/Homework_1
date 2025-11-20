@@ -97,6 +97,42 @@ def exercise_4_analysis(A, labels):
     print(f"\nVerification: ||A·v - λ·v|| = {error:.2e}")
     return perron_eigenvalue, perron_eigenvector
 
+def exercise_1():
+    filename="graph1.dat"
+    A, labels = read_dat(filename)
+    print("Exercise 1 Analysis:")
+    
+    #Graph 1
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score = x_raw / x_raw.sum()
+    
+    #Graph 1 with node 5 added
+    filename="exercise1_graph.dat"
+    A_modified, labels_modified = read_dat(filename)
+    eigenvalues, eigenvectors = np.linalg.eig(A_modified)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score_withnode5 = x_raw / x_raw.sum()
+    
+    print("Importance scores for Graph 1:")
+    sorted_indices = np.argsort(importance_score)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels[idx + 1]
+        score = importance_score[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    
+    print("\nImportance scores for Graph 1 with Node 5 added:")
+    sorted_indices = np.argsort(importance_score_withnode5)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels_modified[idx + 1]
+        score = importance_score_withnode5[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    
+    print("We can see thet the addition of Page 5 created a self-reinforcing feedback loop that allowed Page 3 to successfully manipulate the ranking system and overtake Page 1.")
+    return
+    
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
@@ -104,7 +140,7 @@ def analyze_graph(filename, m=0.15):
     is_hollins = filename == "hollins.dat"
     output_file = None
     if is_hollins:
-        output_file = open("hollins_results.txt", "w")
+        output_file = open("hollins_results.txt", "w", encoding="utf-8")
         output = output_file
     else:
         import sys
@@ -142,13 +178,20 @@ def main():
     file_names = ["graph1.dat", "graph2.dat", "graph1_modified.dat", "hollins.dat"]
     for filename in file_names:
         analyze_graph(filename, m=m)
+    exercise_1()
     return
 
+
+
+
+#Exercise 9
 '''
-Exercise 9:
 Since the importance score is defined:
     x[i]= (1-m)*(Ax)[i] + m*s
 In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is equal to 0. s is a column in which all of his values is  1/n.
 So the importance score for a node with no backlinks is m/n.
 '''
+
+
+#
 main()
