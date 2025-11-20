@@ -100,8 +100,8 @@ def exercise_4_analysis(A, labels):
 def exercise_1():
     filename="graph1.dat"
     A, labels = read_dat(filename)
+    print("\n" + "="*70)
     print("Exercise 1 Analysis:")
-    
     #Graph 1
     eigenvalues, eigenvectors = np.linalg.eig(A)
     idx = np.where(np.isclose(eigenvalues, 1))[0][0]
@@ -135,11 +135,22 @@ def exercise_1():
 
 def exercise_2():
     filename="exercise2_graph.dat"
+    print("\n" + "="*70)
     print("Exercise 2 Analysis:")
     A, labels = read_dat(filename) 
     eigenvalues, eigenvectors = np.linalg.eig(A)
     dimension = np.sum(np.isclose(eigenvalues, 1))
-    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} >= of the number of the components in the web graph.")
+    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} >= of the number of the components in the web graph(4).")
+    return
+
+def exercise_3():
+    filename="exercise3_graph.dat"
+    print("\n" + "="*70)
+    print("Exercise 3 Analysis:")
+    A, labels = read_dat(filename) 
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    dimension = np.sum(np.isclose(eigenvalues, 1))
+    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} because the web contains two closed strongly connected components. Indeed from the node group {1,2} we can't reach the node group {3,4,5} and from the node group {3,4} we can't reach the node group {1,2}.")
     return
 
 
@@ -190,6 +201,7 @@ def main():
         analyze_graph(filename, m=m)
     exercise_1()
     exercise_2()
+    exercise_3()
     return
 
 
