@@ -132,7 +132,17 @@ def exercise_1():
     
     print("We can see thet the addition of Page 5 created a self-reinforcing feedback loop that allowed Page 3 to successfully manipulate the ranking system and overtake Page 1.")
     return
-    
+
+def exercise_2():
+    filename="exercise2_graph.dat"
+    print("Exercise 2 Analysis:")
+    A, labels = read_dat(filename) 
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    dimension = np.sum(np.isclose(eigenvalues, 1))
+    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} >= of the number of the components in the web graph.")
+    return
+
+
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
@@ -179,6 +189,7 @@ def main():
     for filename in file_names:
         analyze_graph(filename, m=m)
     exercise_1()
+    exercise_2()
     return
 
 
