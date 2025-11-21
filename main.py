@@ -206,6 +206,12 @@ def main():
 
 
 
+#Exercise 5
+'''
+Since the importance score is defined:
+    x[k]= sum over j of x[j]/n[j] where j are the nodes that point to k and n[j] is the number of outbound links from node j.
+So if a node has no backlinks, the sum is over an empty set and so x[k]=0.
+'''
 
 #Exercise 9
 '''
@@ -216,5 +222,4 @@ So the importance score for a node with no backlinks is m/n.
 '''
 
 
-#
 main()
