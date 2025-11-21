@@ -302,7 +302,7 @@ def exercise_7_stochastic_proof(filename):
     S = np.ones((n, n)) / n
     M = (1 - m) * A + m * S
     print(f"Matrix M is column-stochastic: {check_matrix_stochastic(M)}")
-
+    
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
@@ -355,14 +355,36 @@ def main():
     exercise_7_stochastic_proof("exercise2_graph.dat")
     return
 
-
-
 #Exercise 5
 '''
 Since the importance score is defined:
     x[k]= sum over j of x[j]/n[j] where j are the nodes that point to k and n[j] is the number of outbound links from node j.
 So if a node has no backlinks, the sum is over an empty set and so x[k]=0.
 '''
+
+#Exercise 8
+"""
+Formal Proof:
+    Let A and B be two n x n column-stochastic matrices. 
+    Let C = AB be their product.
+    We need to show that the sum of the elements in the j-th column of C is 1.
+    The element C_ij is defined by the matrix multiplication:
+    C_ij = Sum_k( A_ik * B_kj )
+    The sum of the j-th column of C is:
+    Sum_i(C_ij) = Sum_i [ Sum_k( A_ik * B_kj ) ]
+    Swap the order of summation (Fubini's theorem for finite sums):
+    Sum_i(C_ij) = Sum_k [ Sum_i( A_ik * B_kj ) ]
+    Since B_kj is constant with respect to the index i, we can factor it out of the inner sum:
+    Sum_i(C_ij) = Sum_k [ B_kj * Sum_i( A_ik ) ]
+    Since A is column-stochastic, the sum of the elements in the k-th column of A is 1:
+    Sum_i( A_ik ) = 1
+    Substitute this into the expression:
+    Sum_i(C_ij) = Sum_k [ B_kj * (1) ]
+                = Sum_k( B_kj )
+    Since B is column-stochastic, the sum of the elements in the j-th column of B is 1:
+    Sum_k( B_kj ) = 1
+    Conclusion: Sum_i(C_ij) = 1. Therefore, the product matrix C = AB is also column-stochastic.
+"""
 
 #Exercise 9
 '''
