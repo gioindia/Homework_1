@@ -46,7 +46,7 @@ def read_dat(file_name):
 
 def power_iteration_with_vector(A, s, m, output, tolerance=1e-6, max_iterations=1000):
     n = A.shape[0]
-    x = np.ones(n) / n
+    x = np.ones(n) / n # initial vector (normalized)
     for iteration in range(max_iterations):
         x_new = (1 - m) * (A @ x) + m * s
         x_new = x_new / np.sum(x_new) # normalized
