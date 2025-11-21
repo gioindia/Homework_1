@@ -1,4 +1,5 @@
 import numpy as np
+import sys
 m=0.15
 
 def read_dat(file_name):
@@ -264,7 +265,43 @@ def exercise_6(filename,i,j):
     
     Therefore, ANY arbitrary relabeling of pages leaves the intrinsic importance scores unchanged; it merely permutes (reorganizes) those values within the score vector.
     """
-    return
+
+def check_matrix_stochastic(matrix, tol=1e-9):
+    column_sums = np.sum(matrix, axis=0)
+    is_one = np.isclose(column_sums, 1.0, atol=tol)
+    is_stochastic = np.all(is_one)
+    return is_stochastic
+
+def exercise_7_stochastic_proof(filename):
+    print("\n" + "="*70)
+    print("Exercise 6 Analysis:")
+    m=0.15
+    A, labels = read_dat(filename)
+    """
+    Exercise 7: Proof that M = (1-m)A + mS is column-stochastic.
+    This function provides the formal proof and a numerical verification.
+    """
+    n = A.shape[0]
+    # 1. Formal Proof (Printed Argument)
+    """
+    Formal Proof:
+    1. A is column-stochastic: Sum_i(A_ij) = 1 for all j.
+    2. S is column-stochastic: S_ij = 1/n, so Sum_i(S_ij) = n * (1/n) = 1 for all j.
+
+    Sum of the j-th column of M:
+    Sum_i(M_ij) = Sum_i[ (1-m)A_ij + mS_ij ]
+                = (1-m) * Sum_i(A_ij) + m * Sum_i(S_ij)  (By linearity)
+                = (1-m) * (1) + m * (1)                 (Substituting the known sums)
+                = 1 - m + m = 1
+
+    Conclusion: Since the sum of every column of M is 1, M is column-stochastic.
+    """
+    
+    # 2. Numerical Verification (Using the input matrix A)
+    print(f"Numerical Verification (using graph: {filename}):")
+    S = np.ones((n, n)) / n
+    M = (1 - m) * A + m * S
+    print(f"Matrix M is column-stochastic: {check_matrix_stochastic(M)}")
 
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
@@ -315,6 +352,7 @@ def main():
     exercise_2()
     exercise_3()
     exercise_6("exercise2_graph.dat",2,3)
+    exercise_7_stochastic_proof("exercise2_graph.dat")
     return
 
 
