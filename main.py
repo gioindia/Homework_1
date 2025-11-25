@@ -327,6 +327,12 @@ def exercise_12():
     print("The Exercise 12 results demonstrate that the original PageRank model (Matrix A) fails to assign any importance to the dangling Node 6 (0.00) because it lacks backlinks, whereas the modified PageRank model (Matrix M) successfully incorporates Node 6's contribution by giving it a positive minimal score (m/n = 0.025000), distributing its importance across the web and providing a more robust, non-ambiguous ranking where Node 3 remains the most important page in both scenarios.\n\n")
     return
 
+def exercise_13():
+    print("Exercise 13 Analysis:")
+    analyze_graph("exercise13_graph.dat", m=0.15)
+    print("The analysis using matrix M shows that the isolated pair (Nodes 6-7) outranks the peripheral nodes of the larger cluster (Nodes 2-5). This demonstrates that out-degree dilution (x_1/4) significantly weakens the authority transferred by the central hub compared to the undiluted reciprocity (x_j/1) retained within the smaller clique.\n\n")
+    return
+
 
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
@@ -380,6 +386,7 @@ def main():
     exercise_7_stochastic_proof("exercise2_graph.dat")
     exercise_11()
     exercise_12()
+    exercise_13()
     return
 
 #Exercise 5
