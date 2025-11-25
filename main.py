@@ -302,6 +302,12 @@ def exercise_7_stochastic_proof(filename):
     S = np.ones((n, n)) / n
     M = (1 - m) * A + m * S
     print(f"Matrix M is column-stochastic: {check_matrix_stochastic(M)}")
+    return
+
+def exercise_11():
+    print("Exercise 11 Analysis:")
+    analyze_graph("exercise11_graph.dat", m=0.15)
+    return
     
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
@@ -353,6 +359,7 @@ def main():
     exercise_3()
     exercise_6("exercise2_graph.dat",2,3)
     exercise_7_stochastic_proof("exercise2_graph.dat")
+    exercise_11()
     return
 
 #Exercise 5
