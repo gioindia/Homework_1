@@ -324,6 +324,7 @@ def exercise_12():
         print(f"  {rank}. {node_label:20s}: {score:.6f}")
     print("\nNow using PageRank with m=0.15:")
     analyze_graph("exercise12_graph.dat", m=0.15)
+    print("The Exercise 12 results demonstrate that the original PageRank model (Matrix A) fails to assign any importance to the dangling Node 6 (0.00) because it lacks backlinks, whereas the modified PageRank model (Matrix M) successfully incorporates Node 6's contribution by giving it a positive minimal score (m/n = 0.025000), distributing its importance across the web and providing a more robust, non-ambiguous ranking where Node 3 remains the most important page in both scenarios.\n\n")
     return
 
 
