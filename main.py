@@ -308,7 +308,25 @@ def exercise_11():
     print("Exercise 11 Analysis:")
     analyze_graph("exercise11_graph.dat", m=0.15)
     return
-    
+
+def exercise_12():
+    print("Exercise 12 Analysis:")
+    A,labels = read_dat("exercise12_graph.dat")
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score = x_raw / x_raw.sum()
+    print("Importance scores with matrix A:")
+    sorted_indices = np.argsort(importance_score)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels[idx + 1]
+        score = importance_score[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    print("\nNow using PageRank with m=0.15:")
+    analyze_graph("exercise12_graph.dat", m=0.15)
+    return
+
+
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
     n = A.shape[0]
@@ -360,6 +378,7 @@ def main():
     exercise_6("exercise2_graph.dat",2,3)
     exercise_7_stochastic_proof("exercise2_graph.dat")
     exercise_11()
+    exercise_12()
     return
 
 #Exercise 5
