@@ -343,6 +343,7 @@ def exercise_6(filename,i,j):
     
     Therefore, ANY arbitrary relabeling of pages leaves the intrinsic importance scores unchanged; it merely permutes (reorganizes) those values within the score vector.
     """
+    return
 
 def check_matrix_stochastic(matrix, tol=1e-9):
     column_sums = np.sum(matrix, axis=0)
