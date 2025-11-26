@@ -25,6 +25,7 @@ PageRank scores (sorted by importance):
   18. http://www1.hollins.edu/faculty/saloweyca/clas%20395/BronzeAGe/tsld001.htm: 0.004746
   19. http://www1.hollins.edu/faculty/saloweyca/clas%20395/DAGEO/sld001.htm: 0.004725
   20. http://www1.hollins.edu/faculty/saloweyca/clas%20395/BronzeAGe/sld040.htm: 0.004626
+<<<<<<< HEAD
   21. http://www1.hollins.edu/faculty/saloweyca/clas%20395/kouroikorai/index.htm: 0.004390
   22. http://www1.hollins.edu/faculty/saloweyca/clas%20395/Acropolis/sld001.htm: 0.004262
   23. http://www1.hollins.edu/faculty/saloweyca/clas%20395/Sculpture/tsld002.htm: 0.004145
@@ -6017,5 +6018,7 @@ PageRank scores (sorted by importance):
   6010. http://www1.hollins.edu/Docs/GVCalendar/GVArchive/gvjan27.htm: 0.000028
   6011. http://www.hollins.edu/academics/library/libtoc.htm: 0.000028
   6012. http://www1.hollins.edu/: 0.000028
+=======
+>>>>>>> ba08bd4 (changing from numpy to scipy)
 
 ======================================================================
