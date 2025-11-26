@@ -566,5 +566,32 @@ m.g.(lambda_star) = 3 - rank(D) = 3 - 2 = 1.
 Since m.g.(lambda_star) = 1 is strictly less than m.a.(lambda_star) = 2, the matrix M is NOT diagonalizable for 0 <= m < 1.
 '''
 
+# Exercise 17
+'''
+-  EFFECT ON COMPUTATION TIME:
+   The PageRank is computed using the Power Method. The speed of convergence 
+   of this method is determined by the magnitude of the second largest 
+   eigenvalue, |lambda_2|.
+   For the Google matrix M = (1-m)A + mS, it is proven that:
+       |lambda_2|<= 1 - m.
+   - Large m (close to 1): The factor (1-m) is small. Convergence is VERY FAST.
+   - Small m (close to 0): The factor (1-m) is close to 1. Convergence is SLOW.
+
+-  EFFECT ON RANKINGS:
+   The parameter m controls the balance between the actual link structure (A) 
+   and the random noise (S).
+   - If m = 1: M = S. The link structure is ignored. All pages get the 
+     exact same importance score (1/n). This is the "egalitarian" case.
+   - If m = 0: M = A. The ranking relies purely on links. However, this 
+     causes issues with non-unique rankings in disconnected webs and 
+     dangling nodes.
+     
+CONCLUSION:
+The choice of m = 0.15 by Google is a trade-off. It is small enough to ensure the 
+rankings reflect the true importance of pages based on backlinks, but 
+large enough to ensure the algorithm converges quickly (fast computation) 
+and handles disconnected components correctly.
+'''
+
 if __name__ == "__main__":
     main()
