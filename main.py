@@ -522,6 +522,49 @@ In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is 
 So the importance score for a node with no backlinks is m/n.
 '''
 
+# Exercise 16
+'''
+1. Eigenvalues (Eigvals) of A:
+The characteristic polynomial of A is p_A(lambda) = -1/4 * (lambda - 1) * (2*lambda + 1)^2.
+The eigenvalues of A are:
+  lambda_A1 = 1           (Algebraic Multiplicity, m.a. = 1)
+  lambda_A2 = -1/2        (Algebraic Multiplicity, m.a. = 2)
+
+2. Eigenvalues of M:
+M is a column-stochastic matrix, so lambda_M1 = 1 is an eigenvalue. The remaining eigenvalues are scaled versions of A's other eigenvalues: lambda_Mi = (1 - m) * lambda_Ai for i >= 2.
+The eigenvalues of M are:
+  lambda_1 = 1            (m.a. = 1)
+  lambda_star = -(1 - m) / 2  (m.a. = 2)
+Since 0 <= m < 1, lambda_star is a real, repeated eigenvalue, and lambda_star != 1.
+
+3. Geometric Multiplicity (m.g.) of lambda_star:
+For M to be diagonalizable, we require the geometric multiplicity m.g.(lambda_star) to equal the algebraic multiplicity, m.a.(lambda_star) = 2.
+The geometric multiplicity is calculated as m.g.(lambda_star) = 3 - rank(D), where D = M - lambda_star * I.
+We therefore need rank(D) = 1.
+
+The matrix D can be written as D = (1 - m)B + mS, where B = A + (1/2)I.
+
+a. Column Dependency (Upper Bound on Rank):
+Since the columns of S are identical (s1 = s2 = s3) and the last two columns of B are identical (b2 = b3), the columns of D satisfy d3 = (1-m)b3 + ms3 = (1-m)b2 + ms2 = d2.
+Since d3 = d2, the columns are linearly dependent, so rank(D) <= 2.
+
+b. Linear Independence of d1 and d2 (Lower Bound on Rank):
+To have rank(D) = 1, the first two columns, d1 and d2, must also be linearly dependent (d1 = k * d2).
+By comparing the first components of d1 and d2, we find that the only possible proportionality constant is k=1.
+However, comparing the second components with k=1 leads to:
+d1[1] = m/3
+d2[1] = (1-m)/2 + m/3
+If d1 = d2, then m/3 = (1-m)/2 + m/3, which implies 0 = (1-m)/2, or m=1.
+Since the problem states 0 <= m < 1, the columns d1 and d2 are linearly INDEPENDENT.
+
+Conclusion on Rank:
+Since d1 and d2 are independent, but d3 = d2, the rank of D is 2.
+rank(M - lambda_star * I) = 2.
+
+4. Final Conclusion:
+m.g.(lambda_star) = 3 - rank(D) = 3 - 2 = 1.
+Since m.g.(lambda_star) = 1 is strictly less than m.a.(lambda_star) = 2, the matrix M is NOT diagonalizable for 0 <= m < 1.
+'''
 
 if __name__ == "__main__":
     main()
