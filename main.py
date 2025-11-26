@@ -1,25 +1,20 @@
 import numpy as np
 import sys
-from scipy import sparse
-from scipy.sparse import linalg as splinalg
-
-m = 0.15
+m=0.15
 
 def read_dat(file_name):
     labels = {}
-    row_indices = [] # Row indices for sparse matrix construction
-    col_indices = [] # Column indices for sparse matrix construction
-    
+    num_nodes = 0
+    num_edges = 0
     try:
         with open(file_name, 'r') as file:
             first_line = file.readline().strip()
-            if not first_line:
-                return None, None
             parts = first_line.split()
             num_nodes = int(parts[0])
             num_edges = int(parts[1])
             
-            # Lettura nodi
+            A=np.zeros((num_nodes,num_nodes))
+
             for _ in range(num_nodes):
                 line = file.readline().strip()
                 if line:
@@ -28,38 +23,19 @@ def read_dat(file_name):
                     node_name = parts[1]
                     labels[node_id] = node_name
 
-            # Lettura archi per costruire matrice sparsa
-            # Nota: PageRank uses A[target][source] = 1
             for _ in range(num_edges):
                 line = file.readline().strip()
                 if line:
                     parts = line.split()
                     source = int(parts[0])
                     target = int(parts[1])
-                    # Salviamo le coordinate. A[riga][colonna]
-                    row_indices.append(target - 1)
-                    col_indices.append(source - 1)
-            
-            # Creazione matrice sparsa (valori tutti a 1 inizialmente)
-            data = np.ones(len(row_indices))
-            # Use COO format for fast construction, then convert to CSC (Compressed Sparse Column) 
-            # for efficient column operations (needed for PageRank normalization).
-            A = sparse.coo_matrix((data, (row_indices, col_indices)), shape=(num_nodes, num_nodes)).tocsc()
-            
-            # Normalizzazione colonne (Stochastic Matrix)
-            # Calcoliamo la somma di ogni colonna
-            col_sums = np.array(A.sum(axis=0)).flatten()
-            
-            # Evitiamo divisione per zero per i nodi dangling (quelli con somma 0 rimangono 0 per ora)
-            # Create scaling factors: 1/sum if sum != 0, otherwise 0
-            with np.errstate(divide='ignore', invalid='ignore'):
-                scale_factors = np.where(col_sums != 0, 1.0 / col_sums, 0)
-            
-            # Moltiplicazione efficiente per la matrice diagonale dei fattori di scala
-            # A_new = A @ D^(-1)
-            D_inv = sparse.diags(scale_factors)
-            A = A @ D_inv
-            
+                    A[target-1][source-1]=1
+                    
+            for i in range(num_nodes):
+                count=np.count_nonzero(A[:,i], axis=0)
+                if count != 0:
+                    A[:,i]=A[:,i]/count
+                    
     except FileNotFoundError:
         print(f"Error: File '{file_name}' not found.")
         return None, None
@@ -72,16 +48,9 @@ def read_dat(file_name):
 def power_iteration_with_vector(A, s, m, output, tolerance=1e-6, max_iterations=1000):
     n = A.shape[0]
     x = np.ones(n) / n # initial vector (normalized)
-    
     for iteration in range(max_iterations):
-        # A is sparse, but the multiplication @ with dense vector x returns a dense vector
-        # PageRank formula iteration: x_new = (1-m)Ax + ms
-        ax = A @ x
-        x_new = (1 - m) * ax + m * s
-        
-        # Normalizzazione L1
-        x_new = x_new / np.sum(x_new) 
-        
+        x_new = (1 - m) * (A @ x) + m * s
+        x_new = x_new / np.sum(x_new) # normalized
         if np.linalg.norm(x_new - x, 1) < tolerance:
             print(f"  Converged in {iteration + 1} iterations", file=output)
             break
@@ -91,58 +60,30 @@ def power_iteration_with_vector(A, s, m, output, tolerance=1e-6, max_iterations=
     return x
 
 def check_dangling_nodes(A):
-    # Sum axis=0 is efficient for CSC matrix
-    col_sums = np.array(A.sum(axis=0)).flatten()
-    # Dangling nodes have a column sum of 0 (considering float tolerance)
-    dangling = np.where(np.isclose(col_sums, 0))[0]
-    return dangling.tolist()
-
-def get_eigenpairs(A, k=None):
-    """
-    Helper function to get eigenvalues/vectors.
-    Uses scipy.sparse.linalg.eigs for large matrices, numpy.linalg.eig for small ones.
-    """
     n = A.shape[0]
-    # Scipy eigs requires k < n-1, so choose a reasonable k.
-    if k is None: 
-        k = min(n - 2, 6) 
-        if k < 1: k = 1
-
-    # If the matrix is very small or k is too close to n, use dense numpy calculation
-    if n < 10 or k >= n - 1:
-        dense_A = A.toarray()
-        evals, evecs = np.linalg.eig(dense_A)
-    else:
-        # 'LM' = Largest Magnitude
-        try:
-            evals, evecs = splinalg.eigs(A, k=k, which='LM')
-        except:
-            # Fallback to dense if sparse convergence fails
-            evals, evecs = np.linalg.eig(A.toarray())
-            
-    return evals, evecs
+    dangling = []
+    for i in range(n):
+        if np.sum(A[:, i]) == 0:
+            dangling.append(i)
+    return dangling
 
 def exercise_4_analysis(A, labels):
     n = A.shape[0]
-    # Use the helper to get eigenvalues
-    eigenvalues, eigenvectors = get_eigenpairs(A)
-    
+    eigenvalues, eigenvectors = np.linalg.eig(A)
     idx = np.argsort(np.abs(eigenvalues))[::-1]
     eigenvalues = eigenvalues[idx]
     eigenvectors = eigenvectors[:, idx]
-    
-    # Get the Perron eigenvalue (largest magnitude)
-    perron_eigenvalue = np.real(eigenvalues[0])
-    perron_eigenvector = np.real(eigenvectors[:, 0])
-    
+    perron_eigenvalue = eigenvalues[0]
+    perron_eigenvector = eigenvectors[:, 0]
     print(f"PERRON EIGENVALUE (largest): λ = {perron_eigenvalue:.6f}")
-    
-    # Ensure non-negativity (Perron-Frobenius theorem) and normalize
+    # Make eigenvector non-negative and normalize
     if np.any(perron_eigenvector < 0):
         perron_eigenvector = -perron_eigenvector
-
+    # Ensure real values
+    if np.iscomplexobj(perron_eigenvector):
+        perron_eigenvector = np.real(perron_eigenvector)
+    # Normalize to sum to 1
     perron_eigenvector = perron_eigenvector / np.sum(perron_eigenvector)
-    
     print(f"\nPerron eigenvector (normalized to sum=1):")
     sorted_indices = np.argsort(perron_eigenvector)[::-1]
     print(f"{'-'*50}")
@@ -150,8 +91,7 @@ def exercise_4_analysis(A, labels):
         node_label = labels[idx + 1]
         score = perron_eigenvector[idx]
         print(f"  {rank}. {node_label:20s}: {score:.6f}")    
-    
-    # Verification of eigenvector property: A*v = lambda*v
+    # Verify it's an eigenvector
     result = A @ perron_eigenvector
     expected = perron_eigenvalue * perron_eigenvector
     error = np.linalg.norm(result - expected)
@@ -160,48 +100,38 @@ def exercise_4_analysis(A, labels):
 
 def exercise_1():
     filename="graph1.dat"
-    # Reading returns sparse matrix
     A, labels = read_dat(filename)
-    if A is None: return
-
     print("\n" + "="*70)
     print("Exercise 1 Analysis:")
+    #Graph 1
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score = x_raw / x_raw.sum()
     
-    # Graph 1
-    vals, vecs = get_eigenpairs(A)
-    # Search for eigenvalue ~1
-    idx_list = np.where(np.isclose(vals, 1))[0]
-    if len(idx_list) > 0:
-        idx = idx_list[0]
-        x_raw = np.real(vecs[:, idx])
-        importance_score = x_raw / x_raw.sum()
-        
-        print("Importance scores for Graph 1:")
-        sorted_indices = np.argsort(importance_score)[::-1]
-        for rank, idx in enumerate(sorted_indices, 1):
-            node_label = labels[idx + 1]
-            score = importance_score[idx]
-            print(f"  {rank}. {node_label:20s}: {score:.6f}")
-    
-    # Graph 1 with node 5
+    #Graph 1 with node 5 added
     filename="exercise1_graph.dat"
     A_modified, labels_modified = read_dat(filename)
-    if A_modified is not None:
-        vals, vecs = get_eigenpairs(A_modified)
-        idx_list = np.where(np.isclose(vals, 1))[0]
-        if len(idx_list) > 0:
-            idx = idx_list[0]
-            x_raw = np.real(vecs[:, idx])
-            importance_score_withnode5 = x_raw / x_raw.sum()
-            
-            print("\nImportance scores for Graph 1 with Node 5 added:")
-            sorted_indices = np.argsort(importance_score_withnode5)[::-1]
-            for rank, idx in enumerate(sorted_indices, 1):
-                node_label = labels_modified[idx + 1]
-                score = importance_score_withnode5[idx]
-                print(f"  {rank}. {node_label:20s}: {score:.6f}")
-        
-        print("We can see thet the addition of Page 5 created a self-reinforcing feedback loop that allowed Page 3 to successfully manipulate the ranking system and overtake Page 1.")
+    eigenvalues, eigenvectors = np.linalg.eig(A_modified)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score_withnode5 = x_raw / x_raw.sum()
+    
+    print("Importance scores for Graph 1:")
+    sorted_indices = np.argsort(importance_score)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels[idx + 1]
+        score = importance_score[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    
+    print("\nImportance scores for Graph 1 with Node 5 added:")
+    sorted_indices = np.argsort(importance_score_withnode5)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels_modified[idx + 1]
+        score = importance_score_withnode5[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    
+    print("We can see thet the addition of Page 5 created a self-reinforcing feedback loop that allowed Page 3 to successfully manipulate the ranking system and overtake Page 1.")
     return
 
 def exercise_2():
@@ -209,13 +139,8 @@ def exercise_2():
     print("\n" + "="*70)
     print("Exercise 2 Analysis:")
     A, labels = read_dat(filename) 
-    if A is None: return
-
-    # We need to find the multiplicity of eigenvalue 1, which corresponds to the number of 
-    # closed strongly connected components in the graph.
-    vals, _ = get_eigenpairs(A, k=min(A.shape[0]-2, 10)) 
-    
-    dimension = np.sum(np.isclose(vals, 1))
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    dimension = np.sum(np.isclose(eigenvalues, 1))
     print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} >= of the number of the components in the web graph(4).")
     return
 
@@ -224,11 +149,9 @@ def exercise_3():
     print("\n" + "="*70)
     print("Exercise 3 Analysis:")
     A, labels = read_dat(filename) 
-    if A is None: return
-
-    vals, _ = get_eigenpairs(A, k=min(A.shape[0]-2, 10))
-    dimension = np.sum(np.isclose(vals, 1))
-    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} because the web contains two closed strongly connected components. Indeed from the node group {{1,2}} we can't reach the node group {{3,4,5}} and from the node group {{3,4}} we can't reach the node group {{1,2}}.")
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    dimension = np.sum(np.isclose(eigenvalues, 1))
+    print(f"The dimension of the eigenspace associated with the eigenvalue 1 is: {dimension} because the web contains two closed strongly connected components. Indeed from the node group {1,2} we can't reach the node group {3,4,5} and from the node group {3,4} we can't reach the node group {1,2}.")
     return
 
 def swap_node_indices(input_filename, output_filename, i, j):
@@ -244,83 +167,82 @@ def swap_node_indices(input_filename, output_filename, i, j):
                 new_lines.append('\n')
                 continue
             parts = line.split()
-            if k == 0: # Header
+
+            # First line (header)
+            if k == 0 and len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
                 new_lines.append(line + '\n')
                 continue
+
+            # General sostitution logic (nodes and links)
             modified_parts = []
-            # Swap indices in the file content (nodes and links)
             for part in parts:
                 if part.isdigit():
-                    if part == str_i: modified_parts.append(str_j)
-                    elif part == str_j: modified_parts.append(str_i)
-                    else: modified_parts.append(part)
+                    if part == str_i:
+                        modified_parts.append(str_j)
+                    elif part == str_j:
+                        modified_parts.append(str_i)
+                    else:
+                        modified_parts.append(part)
                 else:
                     modified_parts.append(part)
             new_lines.append(" ".join(modified_parts) + '\n')
 
+        # Output file
         with open(output_filename, 'w') as outfile:
             outfile.writelines(new_lines)
         print(f"Indecises {i} and {j} swapped (Nodes and Links). Result saved in '{output_filename}'.")
+
+    except FileNotFoundError:
+        print(f"ERROR: file '{input_filename}' not found.")
     except Exception as e:
-        print(f"ERROR: file '{input_filename}' not found or other error: {e}")
+        print(f"Error happened: {e}")
     return output_filename
 
-def exercise_6(filename, i, j):
+def exercise_6(filename,i,j):
     print("\n" + "="*70)
     print("Exercise 6 Analysis:")
     A, labels = read_dat(filename)
-    if A is None: return
 
-    vals, vecs = get_eigenpairs(A)
-    # Assume the first returned pair is the dominant one (or the one of interest)
-    x = vecs[:, 0] 
-    l = vals[0]
+    A_eigenvalues, A_eigenvectors = np.linalg.eig(A)
+    x = A_eigenvectors[:, 0] # vector c chooosen for proving y=P·x
+    l = A_eigenvalues[0] # corresponding eigenvalue
 
-    # Create permutation matrix P that swaps nodes i and j (Sparse LIL for easy manipulation)
-    n = A.shape[0]
-    P = sparse.eye(n, format='lil')
-    P[i-1, i-1] = 0
-    P[j-1, j-1] = 0
-    P[i-1, j-1] = 1
-    P[j-1, i-1] = 1
-    P = P.tocsc() # Convert back to CSC for efficient multiplication
-    
+    # Create permutation matrix P that swaps nodes i and j
+    P=np.eye(A.shape[0])
+    P[[i-1,j-1]] = P[[j-1,i-1]]
     # Compute the theoretical permuted adjacency matrix A2_theoretical
     A2_theoretical = P @ A @ P
 
+    # Apply the swap to the graph file
     print(f"Referring to graph {filename}, we swap the pages with indices i={i} and j={j}.")
     output_file = "exercise6_graph.dat"
     swap_node_indices(filename, output_file, i, j)
     A2, labels2 = read_dat(output_file)
 
-    print("1) Verifying that the permuted adjacency matrix A2_theoretical matches the matrix A2 obtained from the new graph file:")
-    # Check if the difference matrix is the zero matrix
-    diff = (A2_theoretical - A2)
-    if np.allclose(diff.toarray(), 0):
-        print("the matrices match perfectly.")
-    else:
-        print("Mismatch found.")
+    # Verify A2_theoretical == A2
+    print("1)")
+    print(f"Verifying that the permuted adjacency matrix A2_theoretical matches the matrix A2 obtained by applying PagesRank on the new graph:", end=" ") 
+    for r in range(A2_theoretical.shape[0]):
+        for c in range(A2_theoretical.shape[1]):
+            if (A2_theoretical[r][c]!=A2[r][c]):
+                print(f"Mismatch at position ({r},{c}): A2_theoretical={A2_theoretical[r][c]}, A2={A2[r][c]}")
+                return
+    print("the matrices match perfectly.")
 
-
-    print("2) Verify the theorem: λ is an eigenvalue of A2, and y = Px is the corresponding eigenvector.")
-    vals2, vecs2 = get_eigenpairs(A2)
-    
-    # Check eigenvalue match
-    match_val = np.isclose(vals2, l).any()
-    print(f"Eigenvalue lambda={np.real(l):.6f} of A is an eigenvalue for A2 too: {match_val}.")
-    
-    if match_val:
-        idx = np.where(np.isclose(vals2, l))[0][0]
-        y_found = vecs2[:, idx]
-        y_theoretical = P @ x
-        
-        # Normalize to check collinearity (eigenvectors are only determined up to a scalar factor)
-        y_found = y_found / np.linalg.norm(y_found)
-        y_theoretical = y_theoretical / np.linalg.norm(y_theoretical)
-        
-        # Check if vectors are equal up to a sign flip (np.abs handles this)
-        match_pos = np.allclose(np.abs(y_found), np.abs(y_theoretical)) 
-        print(f"Verifying that y corresponding to l is equal to P·x (or -P·x): {match_pos}.")    
+    print("2)")
+    # Verify that l is an eigenvalue of A2 and find corresponding eigenvector y
+    A2_eigenvalues, A2_eigenvectors = np.linalg.eig(A2)
+    print(f"Eigenvalue lambda={l:.6f} of A is an eigenvalue for A2 too: {l in A2_eigenvalues}.")
+    idx = np.where(np.isclose(A2_eigenvalues, l))[0][0]
+    y_found = A2_eigenvectors[:, idx]
+    y_theoretical = P @ x
+    # 1. verify if y_found is equal to y_theoretical (Px)
+    match_positive = np.allclose(y_found, y_theoretical)
+    # 2. verify if y_found is equal to -y_theoretical (-Px)
+    match_negative = np.allclose(y_found, -y_theoretical)
+    # Theorem verified if y_found is equal to either Px or -Px
+    is_proven = match_positive or match_negative
+    print(f"Verifying that y corresponding to l is equal to P·x (or -P·x): {is_proven}.")    
 
     """
     Argumentation on the Invariance of Importance Scores:
@@ -344,30 +266,32 @@ def exercise_6(filename, i, j):
     Therefore, ANY arbitrary relabeling of pages leaves the intrinsic importance scores unchanged; it merely permutes (reorganizes) those values within the score vector.
     """
 
-def check_matrix_stochastic(matrix_sparse, tol=1e-9):
-    # Sum axis=0 for CSC matrix
-    column_sums = np.array(matrix_sparse.sum(axis=0)).flatten()
+def check_matrix_stochastic(matrix, tol=1e-9):
+    column_sums = np.sum(matrix, axis=0)
     is_one = np.isclose(column_sums, 1.0, atol=tol)
     is_stochastic = np.all(is_one)
     return is_stochastic
 
 def exercise_7_stochastic_proof(filename):
     print("\n" + "="*70)
-    print("Exercise 7: Proof that M = (1-m)A + mS is column-stochastic.")
+    print("Exercise 6 Analysis:")
     m=0.15
     A, labels = read_dat(filename)
-    if A is None: return
+    """
+    Exercise 7: Proof that M = (1-m)A + mS is column-stochastic.
+    This function provides the formal proof and a numerical verification.
+    """
     n = A.shape[0]
-    
+    # 1. Formal Proof (Printed Argument)
     """
     Formal Proof:
-    1. A is column-stochastic (by design): Sum_i(A_ij) = 1 for all j (or 0 for dangling nodes, but A' is used here).
+    1. A is column-stochastic: Sum_i(A_ij) = 1 for all j.
     2. S is column-stochastic: S_ij = 1/n, so Sum_i(S_ij) = n * (1/n) = 1 for all j.
 
     Sum of the j-th column of M:
     Sum_i(M_ij) = Sum_i[ (1-m)A_ij + mS_ij ]
                 = (1-m) * Sum_i(A_ij) + m * Sum_i(S_ij)  (By linearity)
-                = (1-m) * (1) + m * (1)                 (Substituting the known sums, assuming A is fully stochastic for non-dangling)
+                = (1-m) * (1) + m * (1)                 (Substituting the known sums)
                 = 1 - m + m = 1
 
     Conclusion: Since the sum of every column of M is 1, M is column-stochastic.
@@ -375,19 +299,43 @@ def exercise_7_stochastic_proof(filename):
     
     # 2. Numerical Verification (Using the input matrix A)
     print(f"Numerical Verification (using graph: {filename}):")
-    # M = (1-m)A + mS
-    # We check the column sums: Sum(M) = (1-m)Sum(A) + m*Sum(S)
-    sum_A = np.array(A.sum(axis=0)).flatten()
-    # Sum(S) is always 1 for all columns
-    sum_M = (1 - m) * sum_A + m * 1.0
-    
-    # The sum should be 1.0 for all columns
-    print(f"Matrix M is column-stochastic: {np.allclose(sum_M, 1.0)}")
-    
+    S = np.ones((n, n)) / n
+    M = (1 - m) * A + m * S
+    print(f"Matrix M is column-stochastic: {check_matrix_stochastic(M)}")
+    return
+
+def exercise_11():
+    print("Exercise 11 Analysis:")
+    analyze_graph("exercise11_graph.dat", m=0.15)
+    return
+
+def exercise_12():
+    print("Exercise 12 Analysis:")
+    A,labels = read_dat("exercise12_graph.dat")
+    eigenvalues, eigenvectors = np.linalg.eig(A)
+    idx = np.where(np.isclose(eigenvalues, 1))[0][0]
+    x_raw = np.real(eigenvectors[:, idx])
+    importance_score = x_raw / x_raw.sum()
+    print("Importance scores with matrix A:")
+    sorted_indices = np.argsort(importance_score)[::-1]
+    for rank, idx in enumerate(sorted_indices, 1):
+        node_label = labels[idx + 1]
+        score = importance_score[idx]
+        print(f"  {rank}. {node_label:20s}: {score:.6f}")
+    print("\nNow using PageRank with m=0.15:")
+    analyze_graph("exercise12_graph.dat", m=0.15)
+    print("The Exercise 12 results demonstrate that the original PageRank model (Matrix A) fails to assign any importance to the dangling Node 6 (0.00) because it lacks backlinks, whereas the modified PageRank model (Matrix M) successfully incorporates Node 6's contribution by giving it a positive minimal score (m/n = 0.025000), distributing its importance across the web and providing a more robust, non-ambiguous ranking where Node 3 remains the most important page in both scenarios.\n\n")
+    return
+
+def exercise_13():
+    print("Exercise 13 Analysis:")
+    analyze_graph("exercise13_graph.dat", m=0.15)
+    print("The analysis using matrix M shows that the isolated pair (Nodes 6-7) outranks the peripheral nodes of the larger cluster (Nodes 2-5). This demonstrates that out-degree dilution (x_1/4) significantly weakens the authority transferred by the central hub compared to the undiluted reciprocity (x_j/1) retained within the smaller clique.\n\n")
+    return
+
+
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
-    if A is None: return None, None
-    
     n = A.shape[0]
     s = np.ones(n) / n
     is_hollins = filename == "hollins.dat"
@@ -396,29 +344,26 @@ def analyze_graph(filename, m=0.15):
         output_file = open("hollins_results.txt", "w", encoding="utf-8")
         output = output_file
     else:
+        import sys
         output = sys.stdout
-        
     print(f"\nGraph {filename}", file=output)
     x = power_iteration_with_vector(A, s, m, output)
-    
     dangling = check_dangling_nodes(A)
     if dangling:
-        dangling_labels = [labels[i+1] for i in dangling]
-        print(f"  - Warning: Found {len(dangling)} dangling node(s): {dangling_labels}", file=output)
+        print(f"  - Warning: Found {len(dangling)} dangling node(s): {[labels[i+1] for i in dangling]}", file=output)
         print(f"    (These nodes have initial importance score ≈ {m/n:.6f})", file=output)
         if filename == "Homework_1/graph1_modified.dat":
             exercise_4_analysis(A, labels)
-            if output_file: output_file.close()
-            return x, labels
+            if output_file:
+                output_file.close()
+            return
     else:
         print(f"  - No dangling nodes detected", file=output)
     
     sorted_indices = np.argsort(x)[::-1]
     print(f"PageRank scores (sorted by importance):", file=output)
     print(f"{'-'*50}", file=output)
-    # Show top 20 if many nodes, otherwise all nodes
-    limit = 20 if n > 50 else n
-    for rank, idx in enumerate(sorted_indices[:limit], 1):
+    for rank, idx in enumerate(sorted_indices, 1):
         node_label = labels[idx + 1]
         score = x[idx]
         print(f"  {rank}. {node_label:20s}: {score:.6f}", file=output)
@@ -431,18 +376,17 @@ def analyze_graph(filename, m=0.15):
     return x, labels
 
 def main():
-    # File names to analyze. Ensure these files exist or comment them out.
-    file_names = ["graph1.dat", "graph2.dat", "exercise1_graph.dat", "hollins.dat"]
-    
+    file_names = ["graph1.dat", "graph2.dat", "graph1_modified.dat", "hollins.dat"]
     for filename in file_names:
         analyze_graph(filename, m=m)
-        
-    # Exercise functions execution
     exercise_1()
     exercise_2()
     exercise_3()
-    exercise_6("exercise2_graph.dat", 2, 3)
+    exercise_6("exercise2_graph.dat",2,3)
     exercise_7_stochastic_proof("exercise2_graph.dat")
+    exercise_11()
+    exercise_12()
+    exercise_13()
     return
 
 #Exercise 5
@@ -484,5 +428,5 @@ In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is 
 So the importance score for a node with no backlinks is m/n.
 '''
 
-if __name__ == "__main__":
-    main()
+
+main()
