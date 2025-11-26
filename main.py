@@ -333,6 +333,67 @@ def exercise_13():
     print("The analysis using matrix M shows that the isolated pair (Nodes 6-7) outranks the peripheral nodes of the larger cluster (Nodes 2-5). This demonstrates that out-degree dilution (x_1/4) significantly weakens the authority transferred by the central hub compared to the undiluted reciprocity (x_j/1) retained within the smaller clique.\n\n")
     return
 
+def exercise_14():
+    print("\n" + "="*70)
+    print("Exercise 14 Analysis (Convergence Speed):")
+    
+    filename = "exercise11_graph.dat"
+    m = 0.15
+    A, labels = read_dat(filename)
+    n = A.shape[0]
+    
+    # Explicitly construct M to calculate eigenvalues and c
+    S = np.ones((n, n)) / n
+    M = (1 - m) * A + m * S
+    
+    # Calculation of c according to Proposition 4
+    min_M_ij = np.min(M) 
+    c_bound = 1 - 2 * min_M_ij
+    
+    # Calculation of eigenvalues to find lambda_2
+    eigenvalues, _ = np.linalg.eig(M)
+    sorted_abs_eig = np.sort(np.abs(eigenvalues))[::-1] 
+    lambda_2 = sorted_abs_eig[1] # second largest eigenvalue
+    
+    print(f"Theoretical Bound c (Prop 4): {c_bound:.6f}")
+    print(f"Second Largest Eigenvalue |lambda_2|: {lambda_2:.6f}")
+    print(f"Expected Convergence Rate (1-m): {1-m:.6f}")
+    print("-" * 60)
+
+    # 3. Find the "True" q (using a very tight convergence)
+    s_vec = np.ones(n) / n
+    q = power_iteration_with_vector(A, s_vec, m, sys.stdout, tolerance=1e-14, max_iterations=2000)
+    
+    np.random.seed(42)
+    x_k = np.random.rand(n)
+    x_k = x_k / np.sum(x_k)
+    
+    # Initial error (k=0)
+    error_prev = np.linalg.norm(x_k - q, 1)
+    
+    print(f"\nIteration Analysis:")
+    print(f"{'k':<5} | {'Error ||M^k x - q||_1':<25} | {'Ratio (Err_k / Err_k-1)':<25}")
+    print("-" * 60)
+    
+    target_steps = range(5,51,5)
+    
+    for k in range(1, 51):
+        
+        x_new = (1 - m) * (A @ x_k) + m * s_vec
+        x_new = x_new / np.sum(x_new)
+        
+        error_curr = np.linalg.norm(x_new - q, 1)
+        ratio = error_curr / error_prev if error_prev > 0 else 0
+        
+        if k in target_steps:
+            print(f"{k:<5} | {error_curr:<25} | {ratio:<25}")
+        
+        x_k = x_new
+        error_prev = error_curr
+
+    print("The results confirm that the PageRank algorithm converges much faster than the pessimistic theoretical bound suggested by Proposition 4, effectively stabilizing at a rate determined by the second largest eigenvalue lambda_2=0.61, which is well below the upper limit of 1-m = 0.85.")
+    return
+
 
 def analyze_graph(filename, m=0.15):
     A, labels = read_dat(filename)
@@ -387,6 +448,7 @@ def main():
     exercise_11()
     exercise_12()
     exercise_13()
+    exercise_14()
     return
 
 #Exercise 5
