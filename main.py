@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import sparse
 from scipy.sparse import linalg as splinalg
+import sys
 
 m = 0.15
 
@@ -481,7 +482,7 @@ def exercise_14():
         x_k = x_new
         error_prev = error_curr
 
-    print("The results confirm that the PageRank algorithm converges much faster than the pessimistic theoretical bound suggested by Proposition 4, effectively stabilizing at a rate determined by the second largest eigenvalue lambda_2=0.61, which is well below the upper limit of 1-m = 0.85.")
+    print("The results confirm that the PageRank algorithm converges much faster than the pessimistic theoretical bound suggested by Proposition 4, effectively stabilizing at a rate determined by the second largest eigenvalue lambda_2=0.61, which is well below the upper limit of 1-m = 0.85.\n\n")
     return
 
 
@@ -498,7 +499,6 @@ def analyze_graph(filename, m=0.15):
         output_file = open("hollins_results.txt", "w", encoding="utf-8")
         output = output_file
     else:
-        import sys
         output = sys.stdout
     print(f"\nGraph {filename}", file=output)
     x = power_iteration_with_vector(A, s, m, output)
