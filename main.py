@@ -585,6 +585,49 @@ In a node with no backlinks A[i] is a column with only 0, so (1-m)*A[i]*x[i] is 
 So the importance score for a node with no backlinks is m/n.
 '''
 
+# Exercise 10
+'''
+1. REACHABILITY AND MATRIX POWERS (A^k):
+The element (A^p)ᵢⱼ is strictly positive (A^p > 0) if and only if there exists 
+a path from page j to page i of exactly p steps. This is based on the definition 
+of matrix multiplication summing over all possible intermediate nodes.
+
+2. POSITIVITY VIA STRONG CONNECTIVITY:
+In a strongly connected graph with n pages, every page i is reachable from every 
+page j in at most n-1 steps.
+Therefore, the sum matrix S_sum = I + A + A² + ... + Aⁿ⁻¹ must be a strictly 
+positive matrix (all entries > 0), because for any pair (i, j), there's a power A^k 
+(where 0 ≤ k ≤ n-1) that has a positive entry at (i, j).
+
+3. DEFINING MATRIX B:
+We define the auxiliary matrix B as the average of these powers:
+B = (1/n) * (I + A + A² + ... + Aⁿ⁻¹)
+
+4. PROPERTIES OF B:
+a. B is \textbf{Positive} (B > 0): Proven by step 2.
+b. B is \textbf{Column-Stochastic}: Since A is column-stochastic, I and all powers 
+   A^k are also column-stochastic. The sum of n column-stochastic matrices yields 
+   a matrix where each column sums to n. Dividing by 1/n restores the column sum 
+   to 1, making B column-stochastic.
+
+5. UNIQUENESS OF EIGENVECTOR FOR B:
+Because B is a \textbf{positive and column-stochastic} matrix, by the extended 
+Perron-Frobenius theorem (Lemma 3.2 in the paper), the eigenspace V₁(B) has a 
+unique dimension: dim(V₁(B)) = 1.
+
+6. LINKING V₁(A) TO V₁(B) AND CONCLUSION:
+Let x be any eigenvector of A corresponding to λ=1 (i.e., Ax = x).
+If Ax = x, then A^k x = x for all k.
+Substituting into the definition of B:
+B x = (1/n) * (Ix + Ax + ... + Aⁿ⁻¹x)
+B x = (1/n) * (x + x + ... + x) = (1/n) * (nx) = x
+
+Thus, every eigenvector x in V₁(A) is also an eigenvector of B (x ∈ V₁(B)).
+Since V₁(A) is a subspace of V₁(B), and dim(V₁(B)) = 1, we must have:
+dim(V₁(A)) = 1.
+This proves that the PageRank vector is unique for a strongly connected web.
+'''
+
 # Exercise 16
 '''
 1. Eigenvalues (Eigvals) of A:
