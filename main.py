@@ -656,5 +656,72 @@ large enough to ensure the algorithm converges quickly (fast computation)
 and handles disconnected components correctly.
 '''
 
+# Exercise 15
+'''
+Hypotheses:
+1. M is an n x n, positive, and column-stochastic matrix.
+2. M is diagonalizable.
+3. {q, v₁, ..., vₙ₋₁} is the basis of eigenvectors, where q is the stationary 
+   eigenvector associated with λ=1.
+4. x₀ is the initial probability vector (sum of components = 1).
+5. Spectral Expansion: x₀ = a*q + sum(bₖ*vₖ)
+
+PART 1: Determine M^k * x₀
+Applying the matrix M iteratively:
+M^k * x₀ = M^k (a*q + sum(bⱼ*vⱼ))
+M^k * x₀ = a*M^k q + sum(bⱼ*M^k vⱼ)
+Since M^k * q = q and M^k * vⱼ = λⱼ^k * vⱼ:
+M^k * x₀ = a*q + sum_{j=1}^{n-1} bⱼ * λⱼ^k * vⱼ
+
+PART 2: Prove a=1 and sum(vⱼ)=0
+Let e be the column vector of all ones (e = [1, 1, ..., 1]^T). The sum of a 
+vector's components is e^T * v.
+
+A) Sum of components of vⱼ (for λⱼ ≠ 1):
+Since M is column-stochastic, e^T * M = e^T.
+M * vⱼ = λⱼ * vⱼ
+Multiply by e^T: e^T * M * vⱼ = λⱼ * e^T * vⱼ
+e^T * vⱼ = λⱼ * (e^T * vⱼ)
+(1 - λⱼ) * (e^T * vⱼ) = 0
+Since λⱼ ≠ 1 (for the non-stationary eigenvectors), we must have e^T * vⱼ = 0.
+CONCLUSION: The sum of the components of every non-stationary eigenvector vⱼ is zero.
+
+B) Determination of a:
+Sum of components of x₀: e^T * x₀ = 1 (by hypothesis).
+e^T * x₀ = a * (e^T * q) + sum_{j=1}^{n-1} bⱼ * (e^T * vⱼ)
+1 = a * (1) + sum_{j=1}^{n-1} bⱼ * (0) (Since e^T * q = 1 and e^T * vⱼ = 0)
+CONCLUSION: a = 1.
+
+PART 3: Prove |λⱼ| < 1 (for λⱼ ≠ 1) using Proposition 4
+Proposition 4 states that for any vector v with sum(v)=0, ||Mv||₁ <= c ||v||₁ where c < 1.
+Since every vⱼ has sum(vⱼ)=0, we apply the proposition:
+||M vⱼ||₁ <= c ||vⱼ||₁
+||λⱼ vⱼ||₁ <= c ||vⱼ||₁
+|λⱼ| * ||vⱼ||₁ <= c ||vⱼ||₁
+Since ||vⱼ||₁ > 0, dividing by it yields: |λⱼ| <= c.
+CONCLUSION: Because c < 1, we must have |λⱼ| < 1.
+
+PART 4: Evaluation of the Limit Ratio
+We want to calculate: L = lim_{k→∞} (||M^k * x₀ - q||₁ / ||M^{k-1} * x₀ - q||₁)
+
+Subtracting q (knowing a=1) gives the error vector:
+M^k * x₀ - q = sum_{j=1}^{n-1} bⱼ * λⱼ^k * vⱼ
+
+As k → ∞, the sum is dominated by the term corresponding to the largest non-unit 
+eigenvalue in magnitude, denoted as λ₂:
+M^k * x₀ - q ≈ b₂ * λ₂^k * v₂
+M^{k-1} * x₀ - q ≈ b₂ * λ₂^{k-1} * v₂
+
+Substituting into the limit ratio:
+L ≈ ( ||b₂ * λ₂^k * v₂||₁ / ||b₂ * λ₂^{k-1} * v₂||₁ )
+L ≈ ( |b₂| * |λ₂|^k * ||v₂||₁ ) / ( |b₂| * |λ₂|^{k-1} * ||v₂||₁ )
+L = |λ₂|
+
+FINAL CONCLUSION: The limit of the ratio is |λ₂|, proving that the asymptotic 
+rate of convergence of the Power Method is determined by the magnitude of the 
+second dominant eigenvalue.
+'''
+
+
 if __name__ == "__main__":
     main()
