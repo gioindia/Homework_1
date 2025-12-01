@@ -143,7 +143,7 @@ def exercise_4_analysis(A, labels):
     return perron_eigenvalue, perron_eigenvector
 
 def exercise_1():
-    filename="graph1.dat"
+    filename="Graphs/graph1.dat"
     A, labels = read_dat(filename)
     if A is None: return
 
@@ -167,7 +167,7 @@ def exercise_1():
             print(f"  {rank}. {node_label:20s}: {score:.6f}")
     
     #Graph 1 with node 5 added
-    filename="exercise1_graph.dat"
+    filename="Graphs/exercise1_graph.dat"
     A_modified, labels_modified = read_dat(filename)
     if A_modified is not None:
         eigenvalues, eigenvectors = get_eigenpairs(A_modified)
@@ -188,7 +188,7 @@ def exercise_1():
     return
 
 def exercise_2():
-    filename="exercise2_graph.dat"
+    filename="Graphs/exercise2_graph.dat"
     print("\n" + "="*70)
     print("Exercise 2 Analysis:")
     A, labels = read_dat(filename) 
@@ -201,7 +201,7 @@ def exercise_2():
     return
 
 def exercise_3():
-    filename="exercise3_graph.dat"
+    filename="Graphs/exercise3_graph.dat"
     print("\n" + "="*70)
     print("Exercise 3 Analysis:")
     A, labels = read_dat(filename) 
@@ -281,7 +281,7 @@ def exercise_6(filename,i,j):
 
     # Apply the swap to the graph file
     print(f"Referring to graph {filename}, we swap the pages with indices i={i} and j={j}.")
-    output_file = "exercise6_graph.dat"
+    output_file = "Graphs/exercise6_graph.dat"
     swap_node_indices(filename, output_file, i, j)
     A2, labels2 = read_dat(output_file)
 
@@ -391,12 +391,12 @@ def exercise_7_stochastic_proof(filename):
 
 def exercise_11():
     print("Exercise 11 Analysis:")
-    analyze_graph("exercise11_graph.dat", m=0.15)
+    analyze_graph("Graphs/exercise11_graph.dat", m=0.15)
     return
 
 def exercise_12():
     print("Exercise 12 Analysis:")
-    A,labels = read_dat("exercise12_graph.dat")
+    A,labels = read_dat("Graphs/exercise12_graph.dat")
     if A is None: return
     
     eigenvalues, eigenvectors = get_eigenpairs(A)
@@ -414,14 +414,14 @@ def exercise_12():
             print(f"  {rank}. {node_label:20s}: {score:.6f}")
             
     print("\nNow using PageRank with m=0.15:")
-    analyze_graph("exercise12_graph.dat", m=0.15)
+    analyze_graph("Graphs/exercise12_graph.dat", m=0.15)
     print("The Exercise 12 results demonstrate that the original PageRank model (Matrix A) fails to assign any importance to the dangling Node 6 (0.00) because it lacks backlinks, whereas the modified PageRank model (Matrix M) successfully incorporates Node 6's contribution by giving it a positive minimal score (m/n = 0.025000), distributing its importance across the web and providing a more robust, non-ambiguous ranking where Node 3 remains the most important page in both scenarios.\n\n")
     return
 
 def exercise_13():
     print("="*70)
     print("Exercise 13 Analysis:")
-    analyze_graph("exercise13_graph.dat", m=0.15)
+    analyze_graph("Graphs/exercise13_graph.dat", m=0.15)
     print("The analysis using matrix M shows that the isolated pair (Nodes 6-7) outranks the peripheral nodes of the larger cluster (Nodes 2-5). This demonstrates that out-degree dilution (x_1/4) significantly weakens the authority transferred by the central hub compared to the undiluted reciprocity (x_j/1) retained within the smaller clique.\n\n")
     return
 
@@ -429,7 +429,7 @@ def exercise_14():
     print("\n" + "="*70)
     print("Exercise 14 Analysis (Convergence Speed):")
     
-    filename = "exercise11_graph.dat"
+    filename = "Graphs/exercise11_graph.dat"
     m = 0.15
     A, labels = read_dat(filename)
     n = A.shape[0]
@@ -494,7 +494,7 @@ def analyze_graph(filename, m=0.15):
     
     n = A.shape[0]
     s = np.ones(n) / n
-    is_hollins = filename == "hollins.dat"
+    is_hollins = filename == "Graphs/hollins.dat"
     output_file = None
     if is_hollins:
         output_file = open("hollins_results.txt", "w", encoding="utf-8")
@@ -507,7 +507,7 @@ def analyze_graph(filename, m=0.15):
     if dangling:
         print(f"  - Warning: Found {len(dangling)} dangling node(s): {[labels[i+1] for i in dangling]}", file=output)
         print(f"    (These nodes have initial importance score ≈ {m/n:.6f})", file=output)
-        if filename == "Homework_1/graph1_modified.dat":
+        if filename == "Graphs/graph1_modified.dat":
             exercise_4_analysis(A, labels)
             if output_file:
                 output_file.close()
@@ -532,14 +532,14 @@ def analyze_graph(filename, m=0.15):
     return x, labels
 
 def main():
-    file_names = ["graph1.dat", "graph2.dat", "graph1_modified.dat", "hollins.dat"]
+    file_names = ["Graphs/graph1.dat", "Graphs/graph2.dat", "Graphs/graph1_modified.dat", "Graphs/hollins.dat"]
     for filename in file_names:
         analyze_graph(filename, m=m)
     exercise_1()
     exercise_2()
     exercise_3()
-    exercise_6("exercise2_graph.dat",2,3)
-    exercise_7_stochastic_proof("exercise2_graph.dat")
+    exercise_6("Graphs/exercise2_graph.dat",2,3)
+    exercise_7_stochastic_proof("Graphs/exercise2_graph.dat")
     exercise_11()
     exercise_12()
     exercise_13()
