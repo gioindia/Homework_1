@@ -486,7 +486,6 @@ def exercise_14():
     print("The results confirm that the PageRank algorithm converges much faster than the pessimistic theoretical bound suggested by Proposition 4, effectively stabilizing at a rate determined by the second largest eigenvalue lambda_2=0.61, which is well below the upper limit of 1-m = 0.85.\n\n")
     return
 
-
 def analyze_graph(filename, m=0.15):
     
     A, labels = read_dat(filename)
@@ -764,7 +763,6 @@ FINAL CONCLUSION: The limit of the ratio is |λ₂|, proving that the asymptotic
 rate of convergence of the Power Method is determined by the magnitude of the 
 second dominant eigenvalue.
 '''
-
 
 if __name__ == "__main__":
     main()
